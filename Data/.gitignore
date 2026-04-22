@@ -1,0 +1,13 @@
+# Ignore all data files
+*.csv
+*.parquet
+*.json
+*.xlsx
+
+# Ignore large files
+*.zip
+*.tar
+*.gz
+
+# Keep folder structure
+!.gitkeep
