@@ -4,11 +4,11 @@
 Analysis of how ML research has changed over time using arXiv abstracts.
 
 ## Team
-- Person A - Data Pipeline
-- Person B - Text Representations (Axis A)
-- Person C - Comparison Method (Axis B)
-- Person D - PCA and evaluation
-- Person E - Report and Github
+- Talha Khan - Data Pipeline
+- Victor Oluwabiyi - Text Representations (Axis A)
+- Chenyu Yang - Comparison Method (Axis B)
+- Sahil Bhinde - PCA and evaluation
+- Tian Luo - Report and Github
 
 ## Setup
 pip install -r requirements.txt
