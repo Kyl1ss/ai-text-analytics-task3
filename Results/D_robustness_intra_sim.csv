@@ -1,0 +1,13 @@
+Method,Period,Intra_Sim
+TF-IDF (SVD),early,0.9115
+TF-IDF (SVD),mid,0.8888
+TF-IDF (SVD),growth,0.8619
+TF-IDF (SVD),recent,0.8666
+Word2Vec,early,0.236
+Word2Vec,mid,0.1505
+Word2Vec,growth,0.0326
+Word2Vec,recent,0.0547
+SBERT,early,0.5341
+SBERT,mid,0.2687
+SBERT,growth,0.0212
+SBERT,recent,0.0273
