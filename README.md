@@ -5,10 +5,11 @@ Analysis of how ML research has changed over time using arXiv abstracts.
 
 ## Team
 - Sahil Bhinde - Data Pipeline
-- Victor Oluwabiyi - Text Representations (Axis A)
+- Victor Oluwabiyi - Text Representations (Axis A) & Trello management
 - Chenyu Yang - Comparison Method (Axis B)
-- Sahil Bhinde - PCA and evaluation
-- Tian Luo - Report and Github
+- Sahil Bhinde and Khan - PCA and evaluation
+- Tian Luo - Report lead and Github management
+- Khan - Summary for preprocessing and PCA, help find reference 
 
 ## Setup
 pip install -r requirements.txt
