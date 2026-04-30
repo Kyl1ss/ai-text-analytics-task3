@@ -4,7 +4,7 @@
 Analysis of how ML research has changed over time using arXiv abstracts.
 
 ## Team
-- Talha Khan - Data Pipeline
+- Sahil Bhinde - Data Pipeline
 - Victor Oluwabiyi - Text Representations (Axis A)
 - Chenyu Yang - Comparison Method (Axis B)
 - Sahil Bhinde - PCA and evaluation
