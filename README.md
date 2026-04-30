@@ -7,9 +7,9 @@ Analysis of how ML research has changed over time using arXiv abstracts.
 - Sahil Bhinde - Data Pipeline
 - Victor Oluwabiyi - Text Representations (Axis A) & Trello management
 - Chenyu Yang - Comparison Method (Axis B)
-- Sahil Bhinde and Khan - PCA and evaluation
+- Sahil Bhinde and Talha Ahmad Khan - PCA and evaluation
 - Tian Luo - Report lead and Github management
-- Khan - Summary for preprocessing and PCA, help find reference 
+- Talha Ahmad Khan - Summary for preprocessing and PCA, help find reference 
 
 ## Setup
 pip install -r requirements.txt
