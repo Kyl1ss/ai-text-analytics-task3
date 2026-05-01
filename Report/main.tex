@@ -88,18 +88,30 @@ Finally, several processed files were saved for use by other parts of the projec
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\linewidth]{figures/Overview.png}
+    \includegraphics[width=\linewidth]{Results/Overview.png}
     \caption{Overview of the arXiv cs.LG dataset, including yearly paper counts, period distribution, and abstract word count distribution.}
     \label{fig:data_overview}
 \end{figure}
 
-\subsection{Baseline System}
-% Explain:
-% 1. How the dataset was filtered, e.g. selecting ML-related papers
-% 2. Text preprocessing steps
-% 3. Baseline text representation, e.g. TF-IDF
-% 4. Baseline analysis method, e.g. keyword frequency / TF-IDF trend analysis / simple clustering
-% 5. Why this baseline is appropriate for analysing topic changes over time
+\subsection{Text Representation and Baseline System}
+
+After preprocessing the dataset, the abstracts were converted into numerical representations so that they could be used for downstream text analytics and machine learning methods. Since the aim of this project is to analyse how machine learning research has changed over time, we compared three different text representation methods: TF-IDF, Word2Vec, and Sentence-BERT. These methods were selected because they capture different aspects of the abstracts, from surface-level vocabulary changes to deeper semantic relationships.
+
+The first representation was TF-IDF, which was used as the baseline representation. TF-IDF represents each abstract as a sparse vector of term importance scores. A term receives a high score if it appears frequently in a specific abstract but is relatively uncommon across the whole corpus. This makes TF-IDF useful for identifying distinctive vocabulary in different time periods. In this project, both unigrams and bigrams were included using an n-gram range of $(1,2)$. This was important because many machine learning concepts are expressed as multi-word phrases, such as \textit{deep learning}, \textit{support vector}, and \textit{reinforcement learning}. English stopwords were removed, and a token pattern was used to keep alphabetic terms with at least three letters, reducing noise from numbers and very short tokens.
+
+In addition to fitting TF-IDF on the full corpus, separate TF-IDF models were also fitted for each time period: \textit{early}, \textit{mid}, \textit{growth}, and \textit{recent}. This allowed us to identify the most distinctive terms within each period. The aim was not only to represent documents for modelling, but also to make vocabulary shifts over time more interpretable. For example, earlier periods were expected to contain more classical machine learning terms, while later periods were expected to show increased use of terms related to neural networks, deep learning, graph-based methods, and other recent research directions.
+
+A count matrix was also created using the same vocabulary settings as the TF-IDF vectorizer. Unlike TF-IDF, the count matrix stores raw word frequencies. This representation was prepared because topic modelling methods such as LDA require raw word counts rather than weighted TF-IDF values. Keeping the same tokenisation and n-gram settings helped make the count-based and TF-IDF-based analyses more comparable.
+
+The second representation was Word2Vec. Unlike TF-IDF, which treats words mainly as independent frequency-based features, Word2Vec learns dense word embeddings based on the surrounding context of each word. Words that appear in similar contexts are placed closer together in the vector space. This is useful for this project because related machine learning concepts may be expressed using different but semantically related terms. The Word2Vec model was trained directly on the cleaned arXiv abstracts, allowing it to learn domain-specific relationships within the machine learning corpus. Each abstract was then represented by averaging the vectors of all words in the abstract. This produced a 100-dimensional vector for each document.
+
+The Word2Vec representation was also checked qualitatively by inspecting similar words for key machine learning terms. For example, terms related to neural networks, reinforcement learning, and Bayesian methods appeared close to related concepts and abbreviations. This suggests that the model captured meaningful relationships within the corpus. However, because the Word2Vec model was trained only on this dataset, it may be less reliable for rare or highly specialised terms.
+
+The third representation was Sentence-BERT. Sentence-BERT encodes the entire abstract as a single dense vector, rather than building a document vector from individual word vectors. We used the \texttt{all-MiniLM-L6-v2} model, which produces 384-dimensional sentence embeddings. This representation was included because it can capture the overall semantic meaning of an abstract more effectively than purely frequency-based methods. This is especially useful when papers from different periods discuss similar research problems using different terminology.
+
+The three representations therefore serve complementary purposes. TF-IDF is the most interpretable and is useful for identifying clear vocabulary changes across time. Word2Vec captures semantic relationships between machine learning concepts and can show connections between related methods. Sentence-BERT provides the richest document-level semantic representation and is useful for identifying conceptually similar papers even when they come from different time periods. Together, these representations allow the project to analyse both surface-level vocabulary shifts and deeper changes in the semantic structure of machine learning research.
+
+The main outputs from this stage were a TF-IDF matrix, a count matrix, Word2Vec document embeddings, and Sentence-BERT document embeddings. These files were saved for use in later comparison, topic analysis, dimensionality reduction, and evaluation stages.
 
 \subsection{Axes of Experimentation}
 % Discuss the main experimental directions:
