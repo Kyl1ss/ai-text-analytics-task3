@@ -1,0 +1,225 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\title{Analysis of How Machine Learning Research Has Changed Over Time Using arXiv Abstracts}
+
+\author{
+Talha Ahmad Khan\\
+University of Bristol
+\and
+Sahil Bhinde \\
+University of Bristol
+\and
+Victor Oluwabiyi \\
+University of Bristol
+\and
+Chenyu Yang \\
+University of Bristol
+\and
+Tian Luo \\
+University of Bristol
+}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+% Abstract: around 0.25 pages
+% Briefly summarise:
+% 1. The overall aim of the project
+% 2. The arXiv abstracts dataset
+% 3. The main text analytics / machine learning methods used
+% 4. The key findings about how ML research has changed over time
+\end{abstract}
+
+
+\section{Introduction}
+% Around 1.5 pages
+% Include:
+% 1. Background: why analysing ML research trends is useful
+% 2. Motivation: rapid growth and development of ML research
+% 3. Task description: analyse changes in ML research topics over time using arXiv abstracts
+% 4. Dataset overview: arXiv abstracts, metadata such as year, title, abstract, categories
+% 5. Requirements for a good analysis:
+%    - meaningful topic representation
+%    - interpretable trends over time
+%    - reliable comparison across years
+%    - clear visualisation of changes
+% 6. Main challenges:
+%    - abstracts are short summaries of research
+%    - terminology changes over time
+%    - topic overlap between ML subfields
+%    - possible imbalance across years or categories
+% 7. Brief structure of the report
+
+
+\section{Methods}
+% Around 3.5 pages
+
+\subsection{Data Preprocessing and Dataset Preparation}
+
+The dataset used in this project contains arXiv abstracts from the \texttt{cs.LG} category, which represents machine learning research. The original filtered dataset contained 7,015 records and five main columns: paper ID, title, abstract, categories, and publication year. The papers cover the period from 1999 to 2021, allowing us to analyse how machine learning research topics have changed over time.
+
+Before applying text analytics methods, we cleaned and prepared the dataset. First, duplicate abstracts were removed to avoid counting the same research content more than once. This removed one duplicated record, leaving 7,014 papers in the final dataset. We also checked for missing values in the key fields, including paper ID, abstract, and year. No missing values were found in these columns.
+
+The abstract text was then normalised. Extra whitespace was removed, and all text was converted to lowercase. Punctuation was removed, hyphenated terms were separated, and the abstracts were tokenised using NLTK. English stopwords were removed to reduce the influence of very common words that are unlikely to represent meaningful research themes. The cleaned version of each abstract was stored in a new column, \texttt{cleaned\_abstract}, while the original abstract was also retained for reference and interpretation.
+
+In addition to text cleaning, we created several useful metadata features. The year column was converted to integer format, and two length-based features were calculated: word count and character count. These features were used for exploratory analysis, especially to compare whether abstract length varied across different time periods.
+
+To support temporal analysis, each paper was assigned to one of four research periods: \textit{early} (1999--2009), \textit{mid} (2010--2014), \textit{growth} (2015--2017), and \textit{recent} (2018--2021). This grouping was used because the number of papers varies substantially across years. Grouping years into broader periods helps reduce yearly noise and makes long-term topic changes easier to interpret.
+
+The final dataset contained 7,014 abstracts. The period distribution was uneven: 150 papers belonged to the early period, 724 to the mid period, 1,488 to the growth period, and 4,652 to the recent period. This imbalance reflects the rapid expansion of machine learning research on arXiv, especially in the most recent years.
+
+For model development and evaluation, the dataset was split into training, validation, and test sets using a 70/15/15 split. Stratified sampling was applied based on the period label to preserve the temporal distribution across the three splits. This produced 4,909 training examples, 1,052 validation examples, and 1,053 test examples. The training set was used to fit models, the validation set was used for model selection and parameter tuning, and the test set was reserved for final evaluation.
+
+Finally, several processed files were saved for use by other parts of the project, including the full cleaned dataset, the train/validation/test splits, and separate CSV files for each time period. An overview figure was also generated to show the number of papers per year, the distribution of papers across periods, and the abstract word count distribution by period.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{figures/Overview.png}
+    \caption{Overview of the arXiv cs.LG dataset, including yearly paper counts, period distribution, and abstract word count distribution.}
+    \label{fig:data_overview}
+\end{figure}
+
+\subsection{Baseline System}
+% Explain:
+% 1. How the dataset was filtered, e.g. selecting ML-related papers
+% 2. Text preprocessing steps
+% 3. Baseline text representation, e.g. TF-IDF
+% 4. Baseline analysis method, e.g. keyword frequency / TF-IDF trend analysis / simple clustering
+% 5. Why this baseline is appropriate for analysing topic changes over time
+
+\subsection{Axes of Experimentation}
+% Discuss the main experimental directions:
+% 1. Time grouping:
+%    - yearly analysis
+%    - multi-year periods
+% 2. Text representation:
+%    - Bag-of-Words
+%    - TF-IDF
+%    - embeddings
+% 3. Topic modelling or clustering method:
+%    - LDA
+%    - K-means
+%    - BERTopic, if used
+% 4. Dimensionality reduction / visualisation:
+%    - PCA
+%    - t-SNE
+%    - UMAP
+% 5. Evaluation and interpretation strategy:
+%    - topic coherence
+%    - qualitative inspection
+%    - trend consistency over time
+
+\subsection{Proposed Improvements}
+% Describe each improvement and its hypothesis:
+% 1. Improvement 1:
+%    e.g. using n-grams to capture phrases such as "deep learning" or "reinforcement learning"
+%
+% 2. Improvement 2:
+%    e.g. using topic modelling to identify latent research themes
+%
+% 3. Improvement 3:
+%    e.g. using embeddings or BERTopic to capture semantic similarity beyond exact keywords
+%
+% 4. Improvement 4:
+%    e.g. grouping years into periods to reduce noise in yearly trends
+
+
+\section{Experimental Evaluation}
+% Around 3.5 pages
+
+\subsection{Evaluation Metrics}
+% Explain:
+% 1. Metrics used for quantitative evaluation
+%    - topic coherence, if topic modelling is used
+%    - silhouette score, if clustering is used
+%    - frequency or proportion changes over time
+% 2. Qualitative evaluation
+%    - inspecting top words per topic
+%    - checking whether topics are meaningful and interpretable
+% 3. Limitations of the metrics
+%    - topic coherence does not fully capture human interpretability
+%    - clustering metrics may not reflect real research fields
+%    - frequency trends may be affected by dataset growth
+
+\subsection{Experimental Setup}
+% Explain:
+% 1. Dataset split or time-based grouping
+%    - Since this is trend analysis, the data may be grouped by year rather than train/test split
+% 2. How preprocessing was applied
+% 3. How models were fitted
+% 4. How hyperparameters were selected
+% 5. Important libraries or model sources
+%    - scikit-learn
+%    - gensim
+%    - sentence-transformers
+%    - BERTopic, if used
+
+\subsection{Results}
+% Present:
+% 1. Dataset distribution over time
+% 2. Top keywords or topics by year / period
+% 3. Topic trend plots
+% 4. Clustering or embedding visualisations
+% 5. Interpretation of how ML research changed over time
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llp{7cm}}
+\toprule
+Period / Year & Main Topics & Interpretation \\
+\midrule
+Early period & -- & -- \\
+Middle period & -- & -- \\
+Recent period & -- & -- \\
+\bottomrule
+\end{tabular}
+\caption{Summary of major machine learning research themes across different time periods.}
+\label{tab:topic_trends}
+\end{table}
+
+\subsection{Error Analysis / Limitations of Analysis}
+% Since this is not necessarily a classification task, this section can focus on limitations:
+% 1. Ambiguous abstracts
+% 2. Papers covering multiple topics
+% 3. Topic overlap
+% 4. Changes in terminology over time
+% 5. Dataset bias, e.g. arXiv does not represent all ML research
+% 6. Model limitations, e.g. LDA topics may be hard to interpret
+
+\subsection{Discussion}
+% Discuss:
+% 1. What changes were observed in ML research over time
+% 2. Which methods gave the clearest insights
+% 3. Strengths and weaknesses of the methods
+% 4. Whether findings match known developments in ML
+% 5. Recommendations for future analysis
+
+
+\section{Conclusion}
+% Around 1 page
+% Summarise:
+% 1. Key findings about how ML research changed over time
+% 2. Which text analytics methods worked well
+% 3. Which methods were less useful
+% 4. Main limitations of the analysis
+% 5. Open challenges and possible future work
+
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
