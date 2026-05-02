@@ -13,20 +13,14 @@
 \title{Analysis of How Machine Learning Research Has Changed Over Time Using arXiv Abstracts}
 
 \author{
-Talha Ahmad Khan\\
-University of Bristol
-\and
-Sahil Bhinde \\
-University of Bristol
-\and
+\begin{tabular}{c}
+Talha Ahmad Khan \\
+Sahil Paresh Bhinde \\
 Victor Oluwabiyi \\
-University of Bristol
-\and
 Chenyu Yang \\
-University of Bristol
-\and
 Tian Luo \\
 University of Bristol
+\end{tabular}
 }
 
 \date{}
@@ -70,21 +64,40 @@ University of Bristol
 
 \subsection{Data Preprocessing and Dataset Preparation}
 
-The dataset used in this project contains arXiv abstracts from the \texttt{cs.LG} category, which represents machine learning research. The original filtered dataset contained 7,015 records and five main columns: paper ID, title, abstract, categories, and publication year. The papers cover the period from 1999 to 2021, allowing us to analyse how machine learning research topics have changed over time.
+The dataset for this project is made up of arXiv abstracts from the
+\texttt{cs.LG} category, which covers machine learning research. The
+papers run from 1999 to 2021, so we have a long enough window to look
+at how the field has changed. The original filtered file had 7{,}015
+records and five main columns: paper ID, title, abstract, categories,
+and publication year. We started by removing one duplicate abstract,
+which left us with 7{,}014 papers. We also checked the key columns for
+missing values and did not find any.
 
-Before applying text analytics methods, we cleaned and prepared the dataset. First, duplicate abstracts were removed to avoid counting the same research content more than once. This removed one duplicated record, leaving 7,014 papers in the final dataset. We also checked for missing values in the key fields, including paper ID, abstract, and year. No missing values were found in these columns.
+Next we cleaned the abstract text. Everything was lowercased, extra
+whitespace and punctuation were removed, hyphenated terms were split
+apart, and the text was tokenised with NLTK. We also removed English
+stopwords, since words like ``the'' or ``of'' do not really tell us
+anything about the topic of a paper. The cleaned text was kept in a
+new \texttt{cleaned\_abstract} column, and the original abstract was
+left in place so we could go back to it later if needed. We also added
+two simple features for exploration: word count and character count
+per abstract.
 
-The abstract text was then normalised. Extra whitespace was removed, and all text was converted to lowercase. Punctuation was removed, hyphenated terms were separated, and the abstracts were tokenised using NLTK. English stopwords were removed to reduce the influence of very common words that are unlikely to represent meaningful research themes. The cleaned version of each abstract was stored in a new column, \texttt{cleaned\_abstract}, while the original abstract was also retained for reference and interpretation.
+Because the number of papers per year is very uneven, we did not work
+year by year. Instead we grouped the papers into four periods:
+\textit{early} (1999--2009), \textit{mid} (2010--2014), \textit{growth}
+(2015--2017), and \textit{recent} (2018--2021). The four periods
+contain 150, 724, 1{,}488, and 4{,}652 papers, which already shows how
+quickly machine learning has grown on arXiv. Most of the dataset comes
+from the last few years. Grouping years into periods made the trends
+easier to compare, since each bucket has enough papers to be stable.
 
-In addition to text cleaning, we created several useful metadata features. The year column was converted to integer format, and two length-based features were calculated: word count and character count. These features were used for exploratory analysis, especially to compare whether abstract length varied across different time periods.
-
-To support temporal analysis, each paper was assigned to one of four research periods: \textit{early} (1999--2009), \textit{mid} (2010--2014), \textit{growth} (2015--2017), and \textit{recent} (2018--2021). This grouping was used because the number of papers varies substantially across years. Grouping years into broader periods helps reduce yearly noise and makes long-term topic changes easier to interpret.
-
-The final dataset contained 7,014 abstracts. The period distribution was uneven: 150 papers belonged to the early period, 724 to the mid period, 1,488 to the growth period, and 4,652 to the recent period. This imbalance reflects the rapid expansion of machine learning research on arXiv, especially in the most recent years.
-
-For model development and evaluation, the dataset was split into training, validation, and test sets using a 70/15/15 split. Stratified sampling was applied based on the period label to preserve the temporal distribution across the three splits. This produced 4,909 training examples, 1,052 validation examples, and 1,053 test examples. The training set was used to fit models, the validation set was used for model selection and parameter tuning, and the test set was reserved for final evaluation.
-
-Finally, several processed files were saved for use by other parts of the project, including the full cleaned dataset, the train/validation/test splits, and separate CSV files for each time period. An overview figure was also generated to show the number of papers per year, the distribution of papers across periods, and the abstract word count distribution by period.
+For modelling we split the data into 70\% train, 15\% validation, and
+15\% test. We used stratified sampling on the period label so that each
+split keeps the same balance of periods as the full dataset. This gave
+us 4{,}909 training, 1{,}052 validation, and 1{,}053 test examples. We
+then saved the cleaned dataset, the three splits, and a separate file
+per period so the rest of the pipeline could reuse them.
 
 \begin{figure}[h]
     \centering
@@ -148,7 +161,83 @@ The main outputs from this stage were a TF-IDF matrix, a count matrix, Word2Vec 
 %
 % 4. Improvement 4:
 %    e.g. grouping years into periods to reduce noise in yearly trends
+\subsection{Dimensionality Reduction and Temporal Drift Analysis}
 
+The three text representations described earlier (TF-IDF, Word2Vec,
+and Sentence-BERT) all sit in fairly high-dimensional spaces, with
+roughly 50{,}000, 100, and 384 dimensions respectively. To see how
+machine learning research has shifted between the four periods, and
+to get something we can actually plot, we applied PCA to each
+representation. We chose PCA because it is simple, deterministic, and
+the components come out ordered by how much variance they explain.
+That makes it easier to compare results across time and across
+representations than something like t-SNE or UMAP, where the output
+can change a lot depending on the random seed and the chosen
+parameters.
+
+\paragraph{Preparing each representation.}
+PCA is sensitive to feature scale, so each representation needed a
+small amount of preparation. For Word2Vec and Sentence-BERT, which
+produce dense vectors, we mean-centred each feature and scaled it to
+unit variance. The mean and standard deviation were computed on the
+training set only and then applied to the validation and test sets,
+to avoid leaking information between splits. TF-IDF is sparse and very
+high-dimensional, so running standard PCA on it directly was not
+practical. We used TruncatedSVD instead, which is the usual stand-in
+for PCA on sparse matrices. TruncatedSVD does not centre the data,
+but our TF-IDF vectors are already L2-normalised, so the components
+are still comparable across documents. For simplicity we just call
+this step PCA throughout the report.
+
+\paragraph{How many components.}
+We used two different numbers of components depending on what we
+wanted to do with them. For visualisation we kept only two
+components, so that documents could be plotted directly with their
+period as a colour. For the quantitative drift analysis we kept 50
+components, which gives more stable centroid estimates because more
+of the variance is preserved. We also report the cumulative explained
+variance for each representation so it is clear how much of the
+signal these projections actually keep.
+
+\paragraph{Tracking drift with period centroids.}
+To get a number for how much the corpus moves over time, we took the
+mean of all training documents in each period within the reduced
+space. This gives one centroid per period. Following these centroids
+in order (\textit{early} $\rightarrow$ \textit{mid} $\rightarrow$
+\textit{growth} $\rightarrow$ \textit{recent}) traces out a path that
+shows the overall direction of change. We measured this in two ways.
+The first is the Euclidean distance between consecutive centroids,
+which tells us how much the average paper changes from one period to
+the next. The second is the distance from the \textit{early} centroid
+to each later one, which tells us how far things have moved overall.
+Because the periods have very different sizes, raw centroids could be
+biased toward the bigger periods, so we also recomputed the distances
+on bootstrap subsamples of equal size and reported the resulting
+confidence intervals.
+
+\paragraph{Checking that the drift is real.}
+One thing we worried about is whether the drift we see is actually
+about the field changing, or just an artefact of one particular
+representation. To check this, we ran the same PCA-based analysis on
+all three representations and compared the results. We looked at two
+things. First, the order of the four period centroids along the main
+components: if the drift is real, the chronological order should
+roughly hold across representations. Second, we computed the Spearman
+rank correlation between the per-period drift magnitudes from each
+pair of representations. When TF-IDF, Word2Vec, and Sentence-BERT
+agree, we are more confident that the change is in the research
+itself and not in how we encoded the text.
+
+\paragraph{What this stage produces.}
+This part of the pipeline feeds three kinds of plots into the results
+section. The first is a 2D PCA scatter plot of the whole corpus,
+coloured by period, which gives a quick visual sense of how the
+papers move over time. The second is a trajectory plot of the four
+period centroids in the same 2D space, with arrows between
+consecutive periods so the direction of drift is easy to read. The
+third is a bar chart of the distances between consecutive periods,
+with bootstrap confidence intervals, which gives a number to go with
+the picture.
 
 \section{Experimental Evaluation}
 % Around 3.5 pages
