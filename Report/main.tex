@@ -9,6 +9,7 @@
 \usepackage{hyperref}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{indentfirst}
 
 \title{Analysis of How Machine Learning Research Has Changed Over Time Using arXiv Abstracts}
 
@@ -40,23 +41,20 @@ University of Bristol
 
 
 \section{Introduction}
-% Around 1.5 pages
-% Include:
-% 1. Background: why analysing ML research trends is useful
-% 2. Motivation: rapid growth and development of ML research
-% 3. Task description: analyse changes in ML research topics over time using arXiv abstracts
-% 4. Dataset overview: arXiv abstracts, metadata such as year, title, abstract, categories
-% 5. Requirements for a good analysis:
-%    - meaningful topic representation
-%    - interpretable trends over time
-%    - reliable comparison across years
-%    - clear visualisation of changes
-% 6. Main challenges:
-%    - abstracts are short summaries of research
-%    - terminology changes over time
-%    - topic overlap between ML subfields
-%    - possible imbalance across years or categories
-% 7. Brief structure of the report
+
+This report is aimed at \textit{Task 3: Comparative corpus Analysis}. The task aims to use the arXiv abstract corpus to analyse the changes of machine learning research over time. We do not regard the abstract as an isolated document, but use the year of its publication to compare different historical periods and identify whether the language, theme and semantic structure of machine learning research show obvious time changes.
+
+The motivation of this task comes from the rapid development of machine learning as a research field. Machine learning has expanded from early statistical and optimisation methods to more recent fields, such as deep learning, graph learning, federal learning and self-supervised learning. Previous literature metrology and thematic modelling studies have shown that text-based analysis can be used to identify research trends and thematic evolution in the fields of artificial intelligence and machine learning \cite{li2020,su2021,yu2023}. This project follows this direction, but especially focusses on the arXiv \texttt{cs.LG} abstract, and compares a variety of text analysis methods used to detect time drift.
+
+The available data consists of papers under the \texttt{cs.LG} classification related to machine learning research in arXiv. Each record contains the thesis ID, title, abstract, classification information and year of publication. After screening and cleaning, the data set contains 7,014 abstracts, covering the period from 1999 to 2021. Due to the significant difference in the number of papers in each year, we divide the corpus into four broader periods: \textit{early} (1999–2009), \textit{mid-term} (2010–2014), \textit{growth period} (2015–2017) and \textit{recent} (2018–2021). This makes the comparison results more stable and allows us to focus on long-term changes rather than year-to-year fluctuations.
+
+Since the goal is to conduct a comparative analysis of the corpus, an excellent solution not only needs to produce a high prediction score system, but also provide explainable evidence of how the corpus changes. It should be able to recognise vocabulary in a specific period, broader thematic changes, and semantic evolution between different periods. In addition, since the proportion of recent papers in the corpus is much higher than that of early papers, the system also needs to deal with the imbalance in the data set. Finally, the analysis results are visualised in charts, and the changes are observed in an intuitive and transparent way.
+
+The challenge of this task comes from the special development of machine learning research. Earlier methods may still appear in recent papers, while newer methods are often based on earlier terms. The abstract is usually short and may not fully present the technical details in the paper. Moreover, terms such as "learning", "model" and "data" appear widely in almost all periods, which makes it difficult to identify the uniqueness of trends. These problems are closely related to the broader problem of analysing the evolution of language and semantics over time \cite{frermann2016,tang2018}.
+
+In order to complete task 3, we compared a variety of methods to capture different dimensions of time changes. Use TF-IDF as an interpretable baseline method to identify words with the characteristics of the times. Word2Vec is used to capture the semantic relationship between terms \cite{mikolov2013efficient,mikolov2013distributed} based on contextual similarity. Sentence-BERT is used to express the entire abstract as an intensive semantic embedding in \cite{reimers2019}. LDA theme modelling is used to identify a wider range of potential themes in the corpus \cite{blei2012}. Then use PCA to visualise time drift in low-dimensional space and track the movement of the centre of mass in various periods \cite{jolliffe2016}.
+
+In general, this analysis aims to answer three main questions: which terms are most representative in different periods; whether the main research topics change with time; and whether different text representations show a consistent time drift direction.
 
 
 \section{Methods}
@@ -108,216 +106,156 @@ per period so the rest of the pipeline could reuse them.
 
 \subsection{Text Representation and Baseline System}
 
-After preprocessing the dataset, the abstracts were converted into numerical representations so that they could be used for downstream text analytics and machine learning methods. Since the aim of this project is to analyse how machine learning research has changed over time, we compared three different text representation methods: TF-IDF, Word2Vec, and Sentence-BERT. These methods were selected because they capture different aspects of the abstracts, from surface-level vocabulary changes to deeper semantic relationships.
+After preprocessing, the abstracts were converted into numerical representations for downstream text analysis. We compared three representations: TF-IDF, Word2Vec, and Sentence-BERT. These methods were chosen because they capture different levels of textual information, from explicit vocabulary patterns to semantic similarity.
 
-The first representation was TF-IDF, which was used as the baseline representation. TF-IDF represents each abstract as a sparse vector of term importance scores. A term receives a high score if it appears frequently in a specific abstract but is relatively uncommon across the whole corpus. This makes TF-IDF useful for identifying distinctive vocabulary in different time periods. In this project, both unigrams and bigrams were included using an n-gram range of $(1,2)$. This was important because many machine learning concepts are expressed as multi-word phrases, such as \textit{deep learning}, \textit{support vector}, and \textit{reinforcement learning}. English stopwords were removed, and a token pattern was used to keep alphabetic terms with at least three letters, reducing noise from numbers and very short tokens.
+TF-IDF was used as the baseline representation. It represents each abstract as a sparse vector of term importance scores, giving higher weights to terms that are frequent in one document but less common across the corpus. This makes it suitable for identifying distinctive vocabulary across time periods. We used both unigrams and bigrams with an n-gram range of $(1,2)$, as many machine learning concepts are expressed as multi-word phrases, such as \textit{deep learning}, \textit{support vector}, and \textit{reinforcement learning}. English stopwords were removed, and only alphabetic tokens with at least three letters were retained.
 
-In addition to fitting TF-IDF on the full corpus, separate TF-IDF models were also fitted for each time period: \textit{early}, \textit{mid}, \textit{growth}, and \textit{recent}. This allowed us to identify the most distinctive terms within each period. The aim was not only to represent documents for modelling, but also to make vocabulary shifts over time more interpretable. For example, earlier periods were expected to contain more classical machine learning terms, while later periods were expected to show increased use of terms related to neural networks, deep learning, graph-based methods, and other recent research directions.
+We also fitted separate TF-IDF models for the four periods: \textit{early}, \textit{mid}, \textit{growth}, and \textit{recent}. This allowed us to identify period-specific terms and make vocabulary shifts more interpretable. In addition, a count matrix was created using the same vocabulary settings. Unlike TF-IDF, the count matrix stores raw word frequencies and was used for topic modelling methods such as LDA, which require count-based inputs.
 
-A count matrix was also created using the same vocabulary settings as the TF-IDF vectorizer. Unlike TF-IDF, the count matrix stores raw word frequencies. This representation was prepared because topic modelling methods such as LDA require raw word counts rather than weighted TF-IDF values. Keeping the same tokenisation and n-gram settings helped make the count-based and TF-IDF-based analyses more comparable.
+The second representation was Word2Vec. While TF-IDF is based on word frequency, Word2Vec learns dense word embeddings from context, placing words with similar usage closer in vector space. The model was trained on the cleaned arXiv abstracts to capture domain-specific semantic relationships. Each abstract was represented by averaging the vectors of its words, producing a 100-dimensional document vector. We also inspected similar words for key machine learning terms to check whether the embeddings captured meaningful relationships within the corpus.
 
-The second representation was Word2Vec. Unlike TF-IDF, which treats words mainly as independent frequency-based features, Word2Vec learns dense word embeddings based on the surrounding context of each word. Words that appear in similar contexts are placed closer together in the vector space. This is useful for this project because related machine learning concepts may be expressed using different but semantically related terms. The Word2Vec model was trained directly on the cleaned arXiv abstracts, allowing it to learn domain-specific relationships within the machine learning corpus. Each abstract was then represented by averaging the vectors of all words in the abstract. This produced a 100-dimensional vector for each document.
+The third representation was Sentence-BERT. We used the \texttt{all-MiniLM-L6-v2} model to encode each abstract as a 384-dimensional sentence embedding. Unlike Word2Vec, which builds document vectors from individual word embeddings, Sentence-BERT directly represents the overall meaning of the abstract. This is useful for comparing papers that discuss similar research problems using different terminology.
 
-The Word2Vec representation was also checked qualitatively by inspecting similar words for key machine learning terms. For example, terms related to neural networks, reinforcement learning, and Bayesian methods appeared close to related concepts and abbreviations. This suggests that the model captured meaningful relationships within the corpus. However, because the Word2Vec model was trained only on this dataset, it may be less reliable for rare or highly specialised terms.
+Overall, the three representations serve different roles. TF-IDF provides interpretable lexical evidence, Word2Vec captures domain-level semantic relationships, and Sentence-BERT provides document-level semantic representations. The resulting TF-IDF matrix, count matrix, Word2Vec embeddings, and Sentence-BERT embeddings were saved for later comparison, topic analysis, dimensionality reduction, and evaluation.
 
-The third representation was Sentence-BERT. Sentence-BERT encodes the entire abstract as a single dense vector, rather than building a document vector from individual word vectors. We used the \texttt{all-MiniLM-L6-v2} model, which produces 384-dimensional sentence embeddings. This representation was included because it can capture the overall semantic meaning of an abstract more effectively than purely frequency-based methods. This is especially useful when papers from different periods discuss similar research problems using different terminology.
+\subsection{Comparative Analysis Methods}
 
-The three representations therefore serve complementary purposes. TF-IDF is the most interpretable and is useful for identifying clear vocabulary changes across time. Word2Vec captures semantic relationships between machine learning concepts and can show connections between related methods. Sentence-BERT provides the richest document-level semantic representation and is useful for identifying conceptually similar papers even when they come from different time periods. Together, these representations allow the project to analyse both surface-level vocabulary shifts and deeper changes in the semantic structure of machine learning research.
+In order to analyse the changes of machine learning research over time, we have designed a comparative analysis framework, focussing on the time drift phenomenon in the arXiv abstract corpus. Instead of relying on a single method, we compared three complementary methods: keyword-based analysis, LDA theme modelling and classifier benchmarking. This enables us to examine time changes from different angles, including unique vocabulary, potential theme structures, and the ability of different text representation methods to distinguish between research periods.
 
-The main outputs from this stage were a TF-IDF matrix, a count matrix, Word2Vec document embeddings, and Sentence-BERT document embeddings. These files were saved for use in later comparison, topic analysis, dimensionality reduction, and evaluation stages.
+The first method is to analyse keywords. Instead of using simple word frequency statistics, we use a logical regression classifier that has been trained to predict the research period to which each abstract belongs. This classifier generates characteristic importance fractions as statistics. Logical regression will allocate coefficients to input characteristics, so terms with large positive coefficients can be interpreted as more distinguishing indicators for a specific period. This method was chosen because it helps to filter out common machine learning words that appear in all periods, while highlighting terms that are more closely associated with specific historical stages. We assume that this method can identify clear technical signs in different periods, such as Bayesian and tree-based terms that appear in the early stage, support vector machines and optimisation terms in the middle stage, and deep learning or diagram-related terms in the later stage.
 
-\subsection{Axes of Experimentation}
-% Discuss the main experimental directions:
-% 1. Time grouping:
-%    - yearly analysis
-%    - multi-year periods
-% 2. Text representation:
-%    - Bag-of-Words
-%    - TF-IDF
-%    - embeddings
-% 3. Topic modelling or clustering method:
-%    - LDA
-%    - K-means
-%    - BERTopic, if used
-% 4. Dimensionality reduction / visualisation:
-%    - PCA
-%    - t-SNE
-%    - UMAP
-% 5. Evaluation and interpretation strategy:
-%    - topic coherence
-%    - qualitative inspection
-%    - trend consistency over time
+The second method is LDA theme modelling. We apply LDA to the counting-based document-vocabulary matrix to identify five potential topics in the corpus. Each abstract is represented by the distribution of these topics, and then the average topic weight for each period (early, medium, growing and recent) is calculated. This method is adopted because keyword analysis can only capture a single term, while topic modelling can reveal a wider range of research topics expressed through related phrases. We assume that LDA will show the changes at the macro level of machine learning research structure, from traditional statistical learning and optimisation to neural networks, deep learning and graph-based methods.
 
-\subsection{Proposed Improvements}
-% Describe each improvement and its hypothesis:
-% 1. Improvement 1:
-%    e.g. using n-grams to capture phrases such as "deep learning" or "reinforcement learning"
-%
-% 2. Improvement 2:
-%    e.g. using topic modelling to identify latent research themes
-%
-% 3. Improvement 3:
-%    e.g. using embeddings or BERTopic to capture semantic similarity beyond exact keywords
-%
-% 4. Improvement 4:
-%    e.g. grouping years into periods to reduce noise in yearly trends
+The third method is the classifier benchmark test. For the task of predicting the period to which each abstract belongs, we compared the traditional TF-IDF representation with the intensive representation based on Word2Vec. This itself is not intended as a practical application task, but indirectly evaluates the degree of distinction between different periods through language and semantic content. If the classifier can predict the period of abstract affiliation with reasonable performance, it indicates that the vocabulary and semantic structure of machine learning research have changed over time. The comparison between TF-IDF and Word2Vec is reasonable because they represent the text in different ways. TF-IDF captures sparse and interpretable lexical patterns, while Word2Vec captures the dense semantic relationship between words. Our hypothesis is that for a few periods, Word2Vec will be more robust, because even if the exact vocabulary overlap is limited, it can group semantically related terms.
+
+These three methods together constitute a comparative framework for analysing time drift. Keyword analysis provides explainable specific period terms, LDA reveals broader changes at the subject level, and classifier benchmarks evaluate whether different representation methods can distinguish different research periods. The comprehensive application of these methods enhances the reliability of the analysis, so that the research results can not only rely on a single model, but can be compared based on multiple types of evidence.
+
 \subsection{Dimensionality Reduction and Temporal Drift Analysis}
 
-The three text representations described earlier (TF-IDF, Word2Vec,
-and Sentence-BERT) all sit in fairly high-dimensional spaces, with
-roughly 50{,}000, 100, and 384 dimensions respectively. To see how
-machine learning research has shifted between the four periods, and
-to get something we can actually plot, we applied PCA to each
-representation. We chose PCA because it is simple, deterministic, and
-the components come out ordered by how much variance they explain.
-That makes it easier to compare results across time and across
-representations than something like t-SNE or UMAP, where the output
-can change a lot depending on the random seed and the chosen
-parameters.
+The three text representations described earlier (TF-IDF, Word2Vec, and Sentence-BERT) all sit in fairly high-dimensional spaces, with roughly 50{,}000, 100, and 384 dimensions respectively. To see how machine learning research has shifted between the four periods, and to get something we can actually plot, we applied PCA to each representation. We chose PCA because it is simple, deterministic, and the components come out ordered by how much variance they explain. That makes it easier to compare results across time and across representations than something like t-SNE or UMAP, where the output can change a lot depending on the random seed and the chosen parameters.
 
 \paragraph{Preparing each representation.}
-PCA is sensitive to feature scale, so each representation needed a
-small amount of preparation. For Word2Vec and Sentence-BERT, which
-produce dense vectors, we mean-centred each feature and scaled it to
-unit variance. The mean and standard deviation were computed on the
-training set only and then applied to the validation and test sets,
-to avoid leaking information between splits. TF-IDF is sparse and very
-high-dimensional, so running standard PCA on it directly was not
-practical. We used TruncatedSVD instead, which is the usual stand-in
-for PCA on sparse matrices. TruncatedSVD does not centre the data,
-but our TF-IDF vectors are already L2-normalised, so the components
-are still comparable across documents. For simplicity we just call
-this step PCA throughout the report.
+PCA is sensitive to feature scale, so each representation needed a small amount of preparation. For Word2Vec and Sentence-BERT, which produce dense vectors, we mean-centred each feature and scaled it to unit variance. The mean and standard deviation were computed on the training set only and then applied to the validation and test sets, to avoid leaking information between splits. TF-IDF is sparse and very high-dimensional, so running standard PCA on it directly was not practical. We used TruncatedSVD instead, which is the usual stand-in for PCA on sparse matrices. TruncatedSVD does not centre the data, but our TF-IDF vectors are already L2-normalised, so the components are still comparable across documents. For simplicity we just call this step PCA throughout the report.
 
 \paragraph{How many components.}
-We used two different numbers of components depending on what we
-wanted to do with them. For visualisation we kept only two
-components, so that documents could be plotted directly with their
-period as a colour. For the quantitative drift analysis we kept 50
-components, which gives more stable centroid estimates because more
-of the variance is preserved. We also report the cumulative explained
-variance for each representation so it is clear how much of the
-signal these projections actually keep.
+We used two different numbers of components depending on what we wanted to do with them. For visualisation we kept only two components, so that documents could be plotted directly with their period as a colour. For the quantitative drift analysis we kept 50 components, which gives more stable centroid estimates because more of the variance is preserved. We also report the cumulative explained variance for each representation so it is clear how much of the signal these projections actually keep.
 
 \paragraph{Tracking drift with period centroids.}
-To get a number for how much the corpus moves over time, we took the
-mean of all training documents in each period within the reduced
-space. This gives one centroid per period. Following these centroids
-in order (\textit{early} $\rightarrow$ \textit{mid} $\rightarrow$
-\textit{growth} $\rightarrow$ \textit{recent}) traces out a path that
-shows the overall direction of change. We measured this in two ways.
-The first is the Euclidean distance between consecutive centroids,
-which tells us how much the average paper changes from one period to
-the next. The second is the distance from the \textit{early} centroid
-to each later one, which tells us how far things have moved overall.
-Because the periods have very different sizes, raw centroids could be
-biased toward the bigger periods, so we also recomputed the distances
-on bootstrap subsamples of equal size and reported the resulting
-confidence intervals.
+To get a number for how much the corpus moves over time, we took the mean of all training documents in each period within the reduced space. This gives one centroid per period. Following these centroids in order (\textit{early} $\rightarrow$ \textit{mid} $\rightarrow$ \textit{growth} $\rightarrow$ \textit{recent}) traces out a path that shows the overall direction of change. We measured this in two ways. The first is the Euclidean distance between consecutive centroids, which tells us how much the average paper changes from one period to the next. The second is the distance from the \textit{early} centroid to each later one, which tells us how far things have moved overall. Because the periods have very different sizes, raw centroids could be biased toward the bigger periods, so we also recomputed the distances on bootstrap subsamples of equal size and reported the resulting confidence intervals.
 
 \paragraph{Checking that the drift is real.}
-One thing we worried about is whether the drift we see is actually
-about the field changing, or just an artefact of one particular
-representation. To check this, we ran the same PCA-based analysis on
-all three representations and compared the results. We looked at two
-things. First, the order of the four period centroids along the main
-components: if the drift is real, the chronological order should
-roughly hold across representations. Second, we computed the Spearman
-rank correlation between the per-period drift magnitudes from each
-pair of representations. When TF-IDF, Word2Vec, and Sentence-BERT
-agree, we are more confident that the change is in the research
-itself and not in how we encoded the text.
+One thing we worried about is whether the drift we see is actually about the field changing, or just an artefact of one particular representation. To check this, we ran the same PCA-based analysis on all three representations and compared the results. We looked at two things. First, the order of the four period centroids along the main components: if the drift is real, the chronological order should roughly hold across representations. Second, we computed the Spearman rank correlation between the per-period drift magnitudes from each pair of representations. When TF-IDF, Word2Vec, and Sentence-BERT agree, we are more confident that the change is in the research itself and not in how we encoded the text.
 
 \paragraph{What this stage produces.}
-This part of the pipeline feeds three kinds of plots into the results
-section. The first is a 2D PCA scatter plot of the whole corpus,
-coloured by period, which gives a quick visual sense of how the
-papers move over time. The second is a trajectory plot of the four
-period centroids in the same 2D space, with arrows between
-consecutive periods so the direction of drift is easy to read. The
-third is a bar chart of the distances between consecutive periods,
-with bootstrap confidence intervals, which gives a number to go with
-the picture.
+This part of the pipeline feeds three kinds of plots into the results section. The first is a 2D PCA scatter plot of the whole corpus, coloured by period, which gives a quick visual sense of how the papers move over time. The second is a trajectory plot of the four period centroids in the same 2D space, with arrows between consecutive periods so the direction of drift is easy to read. The third is a bar chart of the distances between consecutive periods, with bootstrap confidence intervals, which gives a number to go with the picture.
 
 \section{Experimental Evaluation}
 % Around 3.5 pages
 
 \subsection{Evaluation Metrics}
-% Explain:
-% 1. Metrics used for quantitative evaluation
-%    - topic coherence, if topic modelling is used
-%    - silhouette score, if clustering is used
-%    - frequency or proportion changes over time
-% 2. Qualitative evaluation
-%    - inspecting top words per topic
-%    - checking whether topics are meaningful and interpretable
-% 3. Limitations of the metrics
-%    - topic coherence does not fully capture human interpretability
-%    - clustering metrics may not reflect real research fields
-%    - frequency trends may be affected by dataset growth
+
+Because this project combines classification, topic analysis, and temporal drift analysis, we used different evaluation measures for different parts of the pipeline. For the classifier benchmarking task, we reported accuracy and macro F1-score. Accuracy gives an intuitive measure of overall performance, but it is limited in this dataset because the four periods are highly imbalanced. The \textit{recent} period contains far more papers than the \textit{early} period, so a model may achieve reasonable accuracy by mainly predicting the majority period. Macro F1-score is therefore also reported, because it gives equal weight to each period and better reflects performance on smaller classes.
+
+For keyword analysis and LDA topic modelling, the main evaluation was interpretability. For keyword analysis, we inspected the terms with the highest logistic regression coefficients and checked whether they made sense as period-specific technical markers. For LDA, we inspected the top words in each topic and the average topic weights across periods. These evaluations are partly qualitative, but they are suitable for our aim because the project is mainly about understanding research change rather than only maximising predictive accuracy.
+
+For PCA-based temporal drift analysis, we used both visual and distance-based measures. The 2D PCA plots show whether papers from different periods move in the reduced space, while centroid trajectories show the overall direction of movement from \textit{early} to \textit{recent}. Euclidean distances between period centroids provide a numerical summary of drift. However, PCA only preserves part of the original high-dimensional information, so these plots should be interpreted as simplified views of the corpus.
 
 \subsection{Experimental Setup}
-% Explain:
-% 1. Dataset split or time-based grouping
-%    - Since this is trend analysis, the data may be grouped by year rather than train/test split
-% 2. How preprocessing was applied
-% 3. How models were fitted
-% 4. How hyperparameters were selected
-% 5. Important libraries or model sources
-%    - scikit-learn
-%    - gensim
-%    - sentence-transformers
-%    - BERTopic, if used
+
+We used the preprocessed dataset and period labels described in the Methods section. The data was split into training, validation, and test sets using a 70/15/15 split with stratification by period. The training set was used to fit the main models and text representations, the validation set was used to check model behaviour and parameter choices, and the test set was reserved for final evaluation.
+
+For TF-IDF, we used unigram and bigram features with an n-gram range of $(1,2)$, removed English stopwords, and kept alphabetic tokens with at least three letters. The same tokenisation settings were used to create the count matrix for LDA, so that the TF-IDF and topic modelling results were based on comparable preprocessing. LDA was fitted with five topics, and the average topic distribution was calculated for each period.
+
+For Word2Vec, the model was trained on the cleaned abstracts, and each document was represented by averaging its word vectors. Sentence-BERT used the \texttt{all-MiniLM-L6-v2} model to encode each abstract into a 384-dimensional sentence embedding \cite{reimers2019}. Logistic regression classifiers were then trained to predict the period label, and their coefficients were also used to identify period-specific keywords.
+
+For dimensionality reduction, PCA was applied to the standardised Word2Vec and Sentence-BERT embeddings. For TF-IDF, TruncatedSVD was used as the sparse equivalent of PCA. Two components were used for visualisation, while 50 components were used for quantitative drift measurement. Period centroids were calculated in the reduced space, and drift was measured using distances between consecutive centroids. Bootstrap subsampling with equal period sizes was used to reduce the effect of period imbalance.
 
 \subsection{Results}
-% Present:
-% 1. Dataset distribution over time
-% 2. Top keywords or topics by year / period
-% 3. Topic trend plots
-% 4. Clustering or embedding visualisations
-% 5. Interpretation of how ML research changed over time
+
+The dataset is strongly imbalanced across time. As shown in Figure~\ref{fig:data_overview}, the number of papers increases sharply in later years, and the \textit{recent} period contains most of the abstracts. This supports our decision to group years into broader periods and also shows why accuracy should be interpreted carefully.
+
+The keyword analysis showed clear differences between research periods. Table~\ref{tab:period_keywords} summarises representative terms identified from logistic regression coefficients. The \textit{early} period is associated with terms such as \textit{bayes}, \textit{tree}, and \textit{stochastic}, suggesting a stronger focus on probabilistic and classical statistical learning. The \textit{mid} period is linked to \textit{svm}, \textit{clustering}, and \textit{optimization}. The \textit{growth} period shows the rise of deep learning terms such as \textit{deep}, \textit{rnn}, and \textit{networks}. The \textit{recent} period is more associated with \textit{graph}, \textit{federated}, and \textit{self-supervised}, suggesting a move towards newer and more specialised research directions.
 
 \begin{table}[h]
 \centering
-\begin{tabular}{llp{7cm}}
+\begin{tabular}{ll}
 \toprule
-Period / Year & Main Topics & Interpretation \\
+Period & Representative Keywords \\
 \midrule
-Early period & -- & -- \\
-Middle period & -- & -- \\
-Recent period & -- & -- \\
+Early (1999--2009) & bayes, tree, stochastic \\
+Mid (2010--2014) & svm, clustering, optimization \\
+Growth (2015--2017) & deep, rnn, recurrent, networks \\
+Recent (2018--2021) & graph, federated, self-supervised \\
 \bottomrule
 \end{tabular}
-\caption{Summary of major machine learning research themes across different time periods.}
-\label{tab:topic_trends}
+\caption{Representative keywords identified for each research period using logistic regression feature importance.}
+\label{tab:period_keywords}
 \end{table}
 
-\subsection{Error Analysis / Limitations of Analysis}
-% Since this is not necessarily a classification task, this section can focus on limitations:
-% 1. Ambiguous abstracts
-% 2. Papers covering multiple topics
-% 3. Topic overlap
-% 4. Changes in terminology over time
-% 5. Dataset bias, e.g. arXiv does not represent all ML research
-% 6. Model limitations, e.g. LDA topics may be hard to interpret
+The LDA results show a similar thematic shift. The topic related to neural networks and graph-based methods increased over time and reached its highest weight in the \textit{recent} period. In contrast, the topic related to traditional algorithmic and regret-based language declined. This suggests that the change is not only visible in individual keywords, but also in broader topic distributions.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{Results/D_lda_drift.png}
+    \caption{Average LDA topic weights across the four research periods.}
+    \label{fig:lda_topic_distribution}
+\end{figure}
+
+The classifier benchmark provides another way to test whether periods can be separated from text. As shown in Table~\ref{tab:classifier_comparison}, both TF-IDF and Word2Vec classifiers achieved an accuracy of 0.67. However, Word2Vec achieved a higher macro F1-score of 0.33, compared with 0.25 for TF-IDF. This suggests that dense semantic representations are more useful when all periods are weighted equally, especially for smaller periods where exact keyword overlap is limited.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Model & Accuracy & Macro F1 \\
+\midrule
+TF-IDF classifier & 0.67 & 0.25 \\
+Word2Vec classifier & 0.67 & 0.33 \\
+\bottomrule
+\end{tabular}
+\caption{Comparison of TF-IDF and Word2Vec classifiers for predicting research periods.}
+\label{tab:classifier_comparison}
+\end{table}
+
+The PCA-based visualisations provide a direct view of temporal drift. The scatter plots do not show four completely separated clusters, which is expected because machine learning topics overlap across time. However, the period centroids show a clearer movement from \textit{early} to \textit{recent}. This indicates that the drift is gradual and corpus-level rather than a clean separation between individual papers.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{Results/D_pca_scatter.png}
+    \caption{PCA centroid trajectory across the four research periods.}
+    \label{fig:pca_trajectory}
+\end{figure}
+
+\subsection{Error Analysis}
+
+The main errors in the classifier benchmark come from overlap between adjacent periods. Machine learning research does not change suddenly from one topic to another. Older methods continue to appear in later papers, and newer methods often build on older terminology. As a result, the classifier sometimes struggles to draw clear boundaries between periods.
+
+One common source of confusion is between the \textit{early} and \textit{mid} periods. Both contain traditional machine learning language, including probabilistic modelling, optimisation, kernels, and classical supervised learning methods. This is made harder by the small size of the \textit{early} period, which gives the model fewer examples to learn from.
+
+Another source of confusion is between the \textit{growth} and \textit{recent} periods. Deep learning terms became prominent in the growth period but remained common in recent papers. Therefore, words such as \textit{deep}, \textit{neural}, and \textit{network} are not always enough to distinguish the two periods. Recent papers may include newer markers such as \textit{graph}, \textit{federated}, or \textit{self-supervised}, but these do not appear in every recent abstract.
+
+There are also general domain terms, such as \textit{learning}, \textit{model}, \textit{data}, and \textit{algorithm}, that appear across the whole corpus. These words reduce the distinctiveness of LDA topics and can make keyword analysis less precise. This suggests that a more specialised machine learning stopword list could improve the analysis.
 
 \subsection{Discussion}
-% Discuss:
-% 1. What changes were observed in ML research over time
-% 2. Which methods gave the clearest insights
-% 3. Strengths and weaknesses of the methods
-% 4. Whether findings match known developments in ML
-% 5. Recommendations for future analysis
+
+Overall, the results suggest that machine learning research has changed substantially over time, but the change is gradual rather than fully separated into distinct periods. The strongest evidence comes from the consistency between different methods. Keyword analysis, LDA topic modelling, classifier benchmarking, and PCA-based centroid movement all point towards a similar pattern: the field moves from classical statistical and optimisation-based methods towards deep learning, and then towards more recent themes such as graph learning, federated learning, and self-supervised learning.
+
+Each method contributed a different kind of evidence. TF-IDF was useful because it is simple and highly interpretable, making it effective for identifying period-specific vocabulary. However, it depends on exact word overlap and may miss semantically similar terms. Word2Vec was less directly interpretable, but its higher macro F1-score suggests that dense semantic representations are more robust for smaller periods. Sentence-BERT provided richer document-level semantic information and was useful for drift visualisation, although it is harder to explain which exact words drive the change. LDA gave a broader topic-level view, but some topics contained general machine learning words, which reduced their distinctiveness.
+
+The main insight is that no single method fully explains temporal change in machine learning research. TF-IDF gives clearer vocabulary evidence, Word2Vec and Sentence-BERT provide semantic views, LDA shows topic-level movement, and PCA gives a visual and numerical summary of drift. Using them together gives a more reliable picture than using any one approach alone. Future work could improve the analysis by building a more specialised machine learning stopword list, testing different numbers of LDA topics, and using temporal topic models that explicitly model change across time.
 
 
 \section{Conclusion}
-% Around 1 page
-% Summarise:
-% 1. Key findings about how ML research changed over time
-% 2. Which text analytics methods worked well
-% 3. Which methods were less useful
-% 4. Main limitations of the analysis
-% 5. Open challenges and possible future work
+
+This project analysed how machine learning research has changed over time using arXiv abstracts from the \texttt{cs.LG} category. By grouping papers into four periods and comparing several text analytics methods, we found clear evidence of temporal drift in both vocabulary and research themes. The results suggest that the field has moved from earlier probabilistic, tree-based, and optimisation-related methods towards deep learning, and then towards more recent areas such as graph learning, federated learning, and self-supervised learning.
+
+Several methods worked well for different parts of the analysis. TF-IDF was useful as a baseline because it is simple, efficient, and easy to interpret. It helped identify period-specific vocabulary and made the changes in terminology relatively clear. Logistic regression coefficients provided a useful way to extract distinctive keywords for each period, rather than relying only on raw word frequency. LDA topic modelling also helped show broader changes in research themes, especially the rise of neural network and graph-related topics in later periods. Word2Vec performed better than TF-IDF in macro F1-score for period prediction, which suggests that dense semantic representations are more robust when exact keyword overlap is limited. PCA-based centroid analysis also worked well as a visual and numerical way to summarise the overall direction of temporal drift.
+
+However, some methods were less effective or had clear limitations. TF-IDF depends strongly on exact word overlap, so it may miss cases where similar ideas are expressed using different terms. LDA topics were sometimes affected by broad domain words such as \textit{learning}, \textit{model}, and \textit{data}, which reduced topic distinctiveness. Word2Vec and Sentence-BERT provided richer semantic representations, but they were less transparent than TF-IDF, making it harder to explain exactly which words caused the observed changes. The classifier results also showed that the periods are not cleanly separable. This is expected because research fields change gradually, and older methods continue to appear in later papers.
+
+The main open challenge is that temporal change in research is difficult to measure precisely. The arXiv corpus is highly imbalanced across time, with many more papers in the recent period than in the early period. This makes evaluation harder and means that accuracy alone can be misleading. Another challenge is that arXiv abstracts only represent part of machine learning research, so the findings should be interpreted as trends within the \texttt{cs.LG} arXiv corpus rather than the whole field. Future work could improve the analysis by using a more specialised machine learning stopword list, testing different numbers of LDA topics, and applying temporal topic models that explicitly model how themes evolve year by year.
+
+Overall, the experiments show that combining multiple methods gives a more reliable picture of how machine learning research has changed over time. Keyword analysis provides interpretable evidence, topic modelling captures broader research themes, semantic embeddings reveal deeper similarity, and PCA gives a direct visual summary of drift. Together, these results show that the evolution of machine learning research can be observed not only through publication growth, but also through systematic changes in the language and themes of research abstracts.
 
 
 \bibliographystyle{plain}
